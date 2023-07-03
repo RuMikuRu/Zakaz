@@ -1,34 +1,38 @@
 package searchengine.model;
 
-import com.sun.istack.NotNull;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
-@Table(name = "index_search")
-@NoArgsConstructor
-@Setter
 @Getter
-public class IndexSearch {
+@Setter
+@Table(name = "words_index")
+@EqualsAndHashCode
+public class IndexSearch implements Serializable {
+
     @Id
-    @NotNull
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
-    @NotNull
-    @Column(name = "page_id")
-    private int pageId;
-    @NotNull
-    @Column(name = "lemma_id")
-    private int lemmaId;
-    @NotNull
-    private int lemmaCount;
-    @ManyToOne
-    @JoinColumn(name = "page_id",insertable = false,updatable = false,nullable = false)
+    private long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "page_id", referencedColumnName = "id")
     private Page page;
-    @ManyToOne
-    @JoinColumn(name = "lemma_id",insertable = false,updatable = false,nullable = false)
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lemma_id", referencedColumnName = "id")
     private Lemma lemma;
+
+    @Column(nullable = false, name = "index_rank")
+    private float rank;
+
+    public IndexSearch(Page page, Lemma lemma, float rank) {
+        this.page = page;
+        this.lemma = lemma;
+        this.rank = rank;
+    }
+
+    public IndexSearch() {
+    }
 }

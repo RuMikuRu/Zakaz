@@ -1,79 +1,80 @@
 package searchengine.controllers;
 
-import lombok.RequiredArgsConstructor;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import searchengine.config.SitesList;
-import searchengine.dto.statistics.StatisticsResponse;
-import searchengine.model.SitePage;
-import searchengine.services.ApiService;
-import searchengine.services.LemmaService;
+import org.springframework.web.bind.annotation.*;
+import searchengine.dto.response.ResultDTO;
+import searchengine.dto.statistics.SearchDto;
+import searchengine.dto.statistics.statistics.StatisticsResponse;
+import searchengine.repository.SiteRepository;
+import searchengine.services.IndexingService;
+import searchengine.search.SearchStarter;
 import searchengine.services.StatisticsService;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-@RequiredArgsConstructor
-public class ApiController {
+@Slf4j
+public record ApiController(StatisticsService statisticsService, IndexingService indexingService, SiteRepository siteRepository, SearchStarter searchStarter) {
 
-    private final StatisticsService statisticsService;
-    private final ApiService apiService;
-    private final LemmaService lemmaService;
-    private final AtomicBoolean indexingProcessing = new AtomicBoolean(false);
-    private final SitesList sitesList;
-
+    @ApiOperation("Get all statistics")
     @GetMapping("/statistics")
-    public ResponseEntity<StatisticsResponse> statistics() {
-        return ResponseEntity.ok(statisticsService.getStatistics());
+    public ResponseEntity<StatisticsResponse> getStatistics() {
+        return ResponseEntity.ok(statisticsService.getStatisticsResponse());
     }
 
+    @ApiOperation("Start parsing web")
     @GetMapping("/startIndexing")
-    public ResponseEntity startIndexing() {
-        if (indexingProcessing.get()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("'result' : false, " +
-                    "'error' : Индексация уже запущена");
-        } else {
-            indexingProcessing.set(true);
-            Runnable start = () -> apiService.startIndexing(indexingProcessing);
-            new Thread(start).start();
-            return ResponseEntity.status(HttpStatus.OK).body("'result' : true");
-        }
+    public ResultDTO startIndexing() {
+        return indexingService.startIndexing();
     }
 
+    @ApiOperation("Stop parsing web")
     @GetMapping("/stopIndexing")
-    public ResponseEntity stopIndexing() {
-        if (!indexingProcessing.get()) {
-            return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body("'result' : false, " +
-                    "'error' : Индексация не запущена");
+    public ResultDTO stopIndexing() {
+        log.info("ОСТАНОВКА ИНДЕКСАЦИИ");
+        return indexingService.stopIndexing();
+    }
+
+    @PostMapping("/indexPage")
+    @ApiOperation("Индексация отдельной страницы")
+    public ResultDTO indexPage(@RequestParam(name = "url") String url) {
+        if (url.isEmpty()) {
+            log.info("Страница не указана");
+            return new ResultDTO(false, "Страница не указана", HttpStatus.BAD_REQUEST);
         } else {
-            indexingProcessing.set(false);
-            return ResponseEntity.status(HttpStatus.OK).body("'result' : true ");
+            if (indexingService.indexPage(url) == true) {
+                log.info("Страница - " + url + " - добавлена на переиндексацию");
+                return new ResultDTO(true, HttpStatus.OK);
+            } else {
+                log.info("Указанная страница" + "за пределами конфигурационного файла");
+                return new ResultDTO(false, "Указанная страница" + "за пределами конфигурационного файла", HttpStatus.BAD_REQUEST);
+            }
         }
     }
 
-    @GetMapping("/indexPage")
-    public ResponseEntity indexPage(@RequestParam String refUrl) throws IOException {
-        URL url = new URL(refUrl);
-        SitePage sitePage = new SitePage();
-        try {
-            sitesList.getSites().stream().filter(site -> url.getHost().equals(site.getUrl().getHost())).findFirst().map(site -> {
-                sitePage.setName(site.getName());
-                sitePage.setUrl(site.getUrl().toString());
-                return sitePage;
-            }).orElseThrow();
-        } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("result: false " +
-                    "error: Данная страница находится за пределами сайтов " +
-                    "указанных в конфигурационном файле");
+
+
+    @ApiOperation("Search in sites")
+    @GetMapping("/search")
+    public ResultDTO search(@RequestParam(name = "query", required = false, defaultValue = "") String query,
+                            @RequestParam(name = "site", required = false, defaultValue = "") String site,
+                            @RequestParam(name = "offset", required = false, defaultValue = "0") int offset) {
+        List<SearchDto> searchData;
+        if (!site.isEmpty()) {
+            if (siteRepository.findByUrl(site) == null) {
+
+                return new ResultDTO(false, "Данная страница находится за пределами сайтов,\n" +
+                        "указанных в конфигурационном файле", HttpStatus.BAD_REQUEST) ;
+            } else {
+                searchData = searchStarter.getSearchFromOneSite(query, site, offset, 30);
+            }
+        } else {
+            searchData = searchStarter.getFullSearch(query, offset, 30);
         }
-        apiService.refreshPage(sitePage, url);
-        return ResponseEntity.status(HttpStatus.OK).body("'result' : true ");
+        return new ResultDTO(true, searchData.size(), searchData, HttpStatus.OK);
     }
 }

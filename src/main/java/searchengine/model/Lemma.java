@@ -1,32 +1,39 @@
 package searchengine.model;
 
-import com.sun.istack.NotNull;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "lemma",uniqueConstraints = @UniqueConstraint(columnNames = "lemma"))
-@NoArgsConstructor
-@Setter
 @Getter
-public class Lemma {
-    @Id
-    @NotNull
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
-    @NotNull
-    private int frequency;
-    @NotNull
-    @Column(columnDefinition = "VARCHAR(255)")
-    private String lemma;
-    @NotNull
-    @Column(name = "site_id")
-    private int siteId;
-    @ManyToOne
-    @JoinColumn(name = "site_id",insertable = false,updatable = false,nullable = false)
-    private SitePage sitePage;
+@Setter
+@Table(name = "lemma")
+public class Lemma implements Serializable {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "site_id", referencedColumnName = "id")
+    private SitePage siteModelId;
+
+    @OneToMany(mappedBy = "lemma", cascade = CascadeType.ALL)
+    private List<IndexSearch> index = new ArrayList<>();
+
+    private String lemma;
+
+    private int frequency;
+
+    public Lemma(String lemma, int frequency, SitePage siteModelId) {
+        this.lemma = lemma;
+        this.frequency = frequency;
+        this.siteModelId = siteModelId;
+    }
+
+    public Lemma() {
+    }
 }

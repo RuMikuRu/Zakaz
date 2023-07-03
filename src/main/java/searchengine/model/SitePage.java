@@ -1,41 +1,59 @@
 package searchengine.model;
 
-import com.sun.istack.NotNull;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import searchengine.model.enums.Status;
 
 import javax.persistence.*;
-import java.sql.Timestamp;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Entity
 @Table(name = "site")
-@NoArgsConstructor
-@Setter
 @Getter
-public class SitePage {
+@Setter
+public class SitePage implements Serializable {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @NotNull
-    private int id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long id;
+
     @Enumerated(EnumType.STRING)
-    @NotNull
     private Status status;
+
     @Column(name = "status_time")
-    private Timestamp statusTime;
+    private Date statusTime;
+
     @Column(name = "last_error")
-    private String lastError = null;
-    @NotNull
-    @Column(columnDefinition = "VARCHAR(255)")
+    private String lastError;
+
     private String url;
-    @NotNull
-    @Column(columnDefinition = "VARCHAR(255)")
+
     private String name;
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "site_id")
-    private List<Page> pages;
-    @OneToMany
-    @JoinColumn(name = "site_id")
-    private List<Lemma> lemmas;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "siteId", cascade = CascadeType.ALL)
+    private List<Page> pageModelList = new ArrayList<>();
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "siteModelId", cascade = CascadeType.ALL)
+    private List<Lemma> lemmaModelList = new ArrayList<>();
+
+    public SitePage(Status status,
+                     Date statusTime,
+                     String lastError,
+                     String url,
+                     String name,
+                     List<Page> pageModelList,
+                     List<Lemma> lemmaModelList) {
+        this.status = status;
+        this.statusTime = statusTime;
+        this.lastError = lastError;
+        this.url = url;
+        this.name = name;
+        this.pageModelList = pageModelList;
+        this.lemmaModelList = lemmaModelList;
+    }
+
+    public SitePage() {
+    }
 }
