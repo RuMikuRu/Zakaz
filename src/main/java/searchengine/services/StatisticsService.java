@@ -5,7 +5,6 @@ import searchengine.dto.statistics.statistics.DetailedStatisticsItem;
 import searchengine.dto.statistics.statistics.StatisticsData;
 import searchengine.dto.statistics.statistics.StatisticsResponse;
 import searchengine.dto.statistics.statistics.TotalStatistics;
-import searchengine.dto.statistics.statistics.StatisticsResponse;
 import searchengine.model.SitePage;
 import searchengine.repository.LemmaRepository;
 import searchengine.repository.PageRepository;
@@ -17,7 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public abstract record StatisticsService(PageRepository pageRepository, LemmaRepository lemmaRepository, SiteRepository siteRepository) {
+public record StatisticsService(PageRepository pageRepository, LemmaRepository lemmaRepository, SiteRepository siteRepository) {
 
     private TotalStatistics getTotalStatistics() {
         long sites = siteRepository.count();
@@ -47,6 +46,4 @@ public abstract record StatisticsService(PageRepository pageRepository, LemmaRep
         List<DetailedStatisticsItem> list = getDetailedStatisticsItemList();
         return new StatisticsResponse(true, new StatisticsData(total, list));
     }
-
-    public abstract StatisticsResponse getStatistics();
 }
