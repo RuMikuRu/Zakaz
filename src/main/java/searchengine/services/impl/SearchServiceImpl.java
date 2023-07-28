@@ -1,11 +1,13 @@
-package searchengine.services.search;
+package searchengine.services.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import searchengine.dto.response.ResultDTO;
 import searchengine.dto.statistics.SearchDto;
 import searchengine.exception.CurrentIOException;
 import searchengine.lemma.LemmaEngine;
@@ -16,6 +18,8 @@ import searchengine.model.SitePage;
 import searchengine.repository.IndexSearchRepository;
 import searchengine.repository.LemmaRepository;
 import searchengine.repository.PageRepository;
+import searchengine.repository.SiteRepository;
+import searchengine.services.SearchService;
 
 import java.io.IOException;
 import java.util.*;
@@ -25,7 +29,9 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public record SearchService(LemmaEngine lemmaEngine, LemmaRepository lemmaRepository, PageRepository pageRepository, IndexSearchRepository indexRepository) {
+public record SearchServiceImpl(LemmaEngine lemmaEngine, LemmaRepository lemmaRepository, PageRepository pageRepository,
+                                IndexSearchRepository indexRepository, SiteRepository siteRepository,
+                                SearchEngineServiceImpl searchEngineServiceImpl) implements SearchService {
 
     private List<SearchDto> getSearchDtoList(ConcurrentHashMap<Page, Float> pageList,
                                              List<String> textLemmaList) {
@@ -98,7 +104,7 @@ public record SearchService(LemmaEngine lemmaEngine, LemmaRepository lemmaReposi
     }
 
     private Map<Page, Float> getRelevanceFromPage(List<Page> pageList,
-                                                       List<IndexSearch> indexList) {
+                                                  List<IndexSearch> indexList) {
         Map<Page, Float> relevanceMap = new HashMap<>();
 
         int i = 0;
@@ -189,10 +195,26 @@ public record SearchService(LemmaEngine lemmaEngine, LemmaRepository lemmaReposi
         } else return result;
     }
 
-    public  String clearCodeFromTag(String text, String element) {
+    public String clearCodeFromTag(String text, String element) {
         Document doc = Jsoup.parse(text);
         Elements elements = doc.select(element);
         String html = elements.stream().map(Element::html).collect(Collectors.joining());
         return Jsoup.parse(html).text();
+    }
+
+    public ResultDTO search(String query, String site, int offset) {
+        List<SearchDto> searchData;
+        if (!site.isEmpty()) {
+            if (siteRepository.findByUrl(site) == null) {
+
+                return new ResultDTO(false, "Данная страница находится за пределами сайтов,\n" +
+                        "указанных в конфигурационном файле", HttpStatus.BAD_REQUEST);
+            } else {
+                searchData = searchEngineServiceImpl.getSearchFromOneSite(query, site, offset, 30);
+            }
+        } else {
+            searchData = searchEngineServiceImpl.getFullSearch(query, offset, 30);
+        }
+        return new ResultDTO(true, searchData.size(), searchData, HttpStatus.OK);
     }
 }

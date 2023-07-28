@@ -7,6 +7,9 @@ import searchengine.exception.CurrentRuntimeException;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Component
 @Slf4j
@@ -15,22 +18,16 @@ public record LemmaEngine(LemmaConfiguration lemmaConfiguration) {
 
     public Map<String, Integer> getLemmaMap(String text) {
         text = arrayContainsWords(text);
-        Map<String, Integer> lemmaList = new HashMap<>();
         String[] elements = text.toLowerCase(Locale.ROOT).split("\\s+");
-        List<String> wordsList;
-        int count;
-        for (String el : elements) {
-            try {
-                wordsList = getLemma(el);
-            } catch (Exception e) {
-                throw new CurrentRuntimeException(e.getMessage());
-            }
-            for (String word : wordsList) {
-                count = lemmaList.getOrDefault(word, 0);
-                lemmaList.put(word, count + 1);
-            }
-        }
-        return lemmaList;
+        return Arrays.stream(elements)
+                .flatMap(el -> {
+                    try {
+                        return getLemma(el).stream();
+                    } catch (Exception e) {
+                        throw new CurrentRuntimeException(e.getMessage());
+                    }
+                })
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.summingInt(e -> 1)));
     }
 
     public List<String> getLemma(String word) throws IOException {
@@ -75,20 +72,15 @@ public record LemmaEngine(LemmaConfiguration lemmaConfiguration) {
     }
 
     public Collection<Integer> findLemmaIndexInText(String content, String lemma) throws IOException {
-        List<Integer> lemmaIndexList = new ArrayList<>();
         String[] elements = content.toLowerCase(Locale.ROOT)
                 .split("\\p{Punct}|\\s");
-        int index = 0;
-        List<String> lemmas;
+        List<String> allLemmas = new ArrayList<>();
         for (String el : elements) {
-            lemmas = getLemma(el);
-            for (String lem : lemmas) {
-                if (lem.equals(lemma)) {
-                    lemmaIndexList.add(index);
-                }
-            }
-            index += el.length() + 1;
+            allLemmas.addAll(getLemma(el));
         }
-        return lemmaIndexList;
+        return IntStream.range(0, allLemmas.size())
+                .filter(i -> allLemmas.get(i).equals(lemma))
+                .mapToObj(Integer::valueOf)
+                .collect(Collectors.toList());
     }
 }

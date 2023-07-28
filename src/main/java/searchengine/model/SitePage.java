@@ -39,12 +39,12 @@ public class SitePage implements Serializable {
     private List<Lemma> lemmaModelList = new ArrayList<>();
 
     public SitePage(Status status,
-                     Date statusTime,
-                     String lastError,
-                     String url,
-                     String name,
-                     List<Page> pageModelList,
-                     List<Lemma> lemmaModelList) {
+                    Date statusTime,
+                    String lastError,
+                    String url,
+                    String name,
+                    List<Page> pageModelList,
+                    List<Lemma> lemmaModelList) {
         this.status = status;
         this.statusTime = statusTime;
         this.lastError = lastError;

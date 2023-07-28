@@ -7,7 +7,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import searchengine.config.SitesList;
+import searchengine.model.SitesList;
 import searchengine.dto.statistics.PageDto;
 
 import java.util.ArrayList;

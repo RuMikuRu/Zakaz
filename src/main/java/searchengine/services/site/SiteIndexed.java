@@ -2,8 +2,8 @@ package searchengine.services.site;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import searchengine.config.Site;
-import searchengine.config.SitesList;
+import searchengine.model.Site;
+import searchengine.model.SitesList;
 import searchengine.dto.statistics.IndexDto;
 import searchengine.dto.statistics.LemmaDto;
 import searchengine.dto.statistics.PageDto;

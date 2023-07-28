@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 import searchengine.model.SitePage;
 
 
-
 @Repository
 public interface SiteRepository extends JpaRepository<SitePage, Long> {
 

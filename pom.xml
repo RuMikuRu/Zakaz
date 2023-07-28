@@ -108,7 +108,7 @@
             <artifactId>russian</artifactId>
             <version>1.5-SNAPSHOT</version>
             <scope>system</scope>
-            <systemPath>${pom.basedir}/lib/russian-1.5.jar</systemPath>
+            <systemPath>${pom.basedir}/morphology/russian.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -116,7 +116,7 @@
             <artifactId>english</artifactId>
             <version>1.5-SNAPSHOT</version>
             <scope>system</scope>
-            <systemPath>${pom.basedir}/lib/english-1.5.jar</systemPath>
+            <systemPath>${pom.basedir}/morphology/english.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -124,7 +124,7 @@
             <artifactId>morphology</artifactId>
             <version>1.5-SNAPSHOT</version>
             <scope>system</scope>
-            <systemPath>${pom.basedir}/lib/morphology-1.5.jar</systemPath>
+            <systemPath>${pom.basedir}/morphology/morphology.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -132,7 +132,7 @@
             <artifactId>dictionary-reader</artifactId>
             <version>1.5-SNAPSHOT</version>
             <scope>system</scope>
-            <systemPath>${pom.basedir}/lib/dictionary-reader-1.5.jar</systemPath>
+            <systemPath>${pom.basedir}/morphology/dictionary-reader.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -140,7 +140,7 @@
             <artifactId>morph</artifactId>
             <version>1.5-SNAPSHOT</version>
             <scope>system</scope>
-            <systemPath>${pom.basedir}/lib/morph-1.5.jar</systemPath>
+            <systemPath>${pom.basedir}/morphology/morph.jar</systemPath>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui -->
         <dependency>

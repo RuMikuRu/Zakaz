@@ -1,17 +1,19 @@
-package searchengine.search;
+package searchengine.services.impl;
 
 import org.springframework.stereotype.Service;
 import searchengine.dto.statistics.SearchDto;
 import searchengine.model.Lemma;
 import searchengine.model.SitePage;
 import searchengine.repository.SiteRepository;
-import searchengine.services.search.SearchService;
+import searchengine.services.SearchEngineService;
+import searchengine.services.SearchService;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public record SearchStarter(SiteRepository siteRepository, SearchService searchService) {
+public record SearchEngineServiceImpl(SiteRepository siteRepository,
+                                      SearchService searchService) implements SearchEngineService {
 
     public List<SearchDto> getSearchFromOneSite(String text,
                                                 String url,
